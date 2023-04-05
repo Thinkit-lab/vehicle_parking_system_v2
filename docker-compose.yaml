@@ -1,52 +1,94 @@
+#services:
+#  app:
+#    image: 'vehicle_parking'
+#    build:
+#      context: .
+#    container_name: vehicle_parking
+#    depends_on:
+#      - postgres
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/vehicle_db
+#      SPRING_DATASOURCE_USERNAME: postgres
+#      SPRING_DATASOURCE_PASSWORD: devlon
+#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+#
+#  postgres:
+#    container_name: postgres_vehicle_parking
+#    image: 'postgres:13.1-alpine'
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: devlon
+#      PGDATA: /data/postgres
+#    volumes:
+#      - postgres:/data/postgres
+#    ports:
+#      - "5433:5433"
+#    networks:
+#      - postgres
+#    restart: unless-stopped
+#
+##  pgadmin:
+##    container_name: pgadmin_container_activity_tracker
+##    image: dpage/pgadmin4
+##    environment:
+##      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+##      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+##      PGADMIN_CONFIG_SERVER_MODE: 'False'
+##    volumes:
+##      - pgadmin:/var/lib/pgadmin
+##
+##    ports:
+##      - "5050:80"
+##    networks:
+##      - postgres
+##    restart: unless-stopped
+#
+#networks:
+#  postgres:
+#    driver: bridge
+#
+#volumes:
+#  postgres:
+#  pgadmin:
+
+
+version: '3.3'
 services:
+
   app:
     image: 'vehicle_parking'
     build:
       context: .
     container_name: vehicle_parking
     depends_on:
-      - postgres
+      - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/vehicle_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: devlon
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/db?autoReconnect=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
-  postgres:
-    container_name: postgres_vehicle_parking
-    image: 'postgres:13.1-alpine'
+
+  db:
+    image: mysql:8
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: devlon
-      PGDATA: /data/postgres
-    volumes:
-      - postgres:/data/postgres
+      MYSQL_DATABASE: 'db'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: 'user'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'password'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
     ports:
-      - "5432:5432"
-    networks:
-      - postgres
-    restart: unless-stopped
-
-#  pgadmin:
-#    container_name: pgadmin_container_activity_tracker
-#    image: dpage/pgadmin4
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-#      PGADMIN_CONFIG_SERVER_MODE: 'False'
-#    volumes:
-#      - pgadmin:/var/lib/pgadmin
-#
-#    ports:
-#      - "5050:80"
-#    networks:
-#      - postgres
-#    restart: unless-stopped
-
-networks:
-  postgres:
-    driver: bridge
-
+      # <Port exposed> : <MySQL Port running inside container>
+      - '3305:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3305'
+      # Where our data will be persisted
+    volumes:
+      - my-db:/var/lib/mysql
+# Names our volume
 volumes:
-  postgres:
-  pgadmin:
+  my-db:
